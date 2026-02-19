@@ -2606,26 +2606,63 @@ origStructClicks.forEach(b=>b.addEventListener('click',()=>{
   if(window.innerWidth<=768){sideEl.classList.remove('open');mobOverlay.classList.remove('show');mobToggle.textContent='☰'}
 }));
 
-// Touch events on canvas
-function touchXY(e){
-  const touch=e.touches[0]||e.changedTouches[0];
-  const r=mainCv.getBoundingClientRect();
-  return{clientX:touch.clientX,clientY:touch.clientY};
-}
+// Touch events on canvas — direct handling, not synthetic mouse events
+let touchDragging=false;
 mainCv.addEventListener('touchstart',e=>{
   e.preventDefault();
-  const{clientX,clientY}=touchXY(e);
-  mainCv.dispatchEvent(new MouseEvent('mousedown',{clientX,clientY,button:0,bubbles:true}));
+  const touch=e.touches[0];
+  const r=mainCv.getBoundingClientRect();
+  const x=touch.clientX-r.left,y=touch.clientY-r.top;
+  mX=x;mY=y;
+  
+  if(mode==='place'){addAtom(selEl,x,y)}
+  else if(mode==='drag'){
+    const a=atomAt(x,y);
+    if(a){dragAtom=a;dragOff={x:a.x-x,y:a.y-y};touchDragging=true}
+  }
+  else if(mode==='bond'){
+    const a=atomAt(x,y);
+    if(a){if(!bondStart)bondStart=a;
+      else{if(bondStart!==a&&canBond(bondStart)&&canBond(a)&&!bondExists(bondStart,a)){
+        addBond(bondStart,a,1);logBond(bondStart.sym+'-'+a.sym+' bond forced')}bondStart=null}}
+  }
+  else if(mode==='break_b'){
+    const b=bondAt(x,y);
+    if(b){const a1=atoms.find(a=>a.id===b.a),a2=atoms.find(a=>a.id===b.b);
+      logBond((a1?a1.sym:'?')+'−'+(a2?a2.sym:'?')+' broken');removeBond(b)}
+    else{const a=atomAt(x,y);if(a&&a.bonds.length>0){
+      const lb=a.bonds[a.bonds.length-1];const oid=lb.a===a.id?lb.b:lb.a;
+      const oa=atoms.find(x=>x.id===oid);logBond(a.sym+'−'+(oa?oa.sym:'?')+' broken');removeBond(lb)}}
+  }
+  else if(mode==='ionize'){
+    const a=atomAt(x,y);
+    if(a){if(!showCharges){showCharges=true;document.getElementById('bCharges').classList.add('active')}
+      if(a.electrons>0){a.electrons--;a.charge++;
+        logBond(a.sym+' − e⁻ → '+a.sym+(a.charge>0?a.charge+'⁺':a.charge===0?'':''+a.charge+'⁻'));
+        const el=getEl(a);const maxB=Math.max(0,el.valence-a.charge);
+        while(a.bonds.length>maxB&&a.bonds.length>0){const b=a.bonds[a.bonds.length-1];
+          const oa=atoms.find(x=>x.id===(b.a===a.id?b.b:b.a));removeBond(b)}}}
+  }
+  else if(mode==='eraser'){const a=atomAt(x,y);if(a)removeAtom(a)}
 },{passive:false});
+
 mainCv.addEventListener('touchmove',e=>{
   e.preventDefault();
-  const{clientX,clientY}=touchXY(e);
-  mainCv.dispatchEvent(new MouseEvent('mousemove',{clientX,clientY,bubbles:true}));
+  const touch=e.touches[0];
+  const r=mainCv.getBoundingClientRect();
+  mX=touch.clientX-r.left;mY=touch.clientY-r.top;
+  if(dragAtom){
+    dragAtom.x=mX+dragOff.x;dragAtom.y=mY+dragOff.y;
+    dragAtom.vx=0;dragAtom.vy=0;
+  }
+  hoverAtom=atomAt(mX,mY);
 },{passive:false});
+
 mainCv.addEventListener('touchend',e=>{
   e.preventDefault();
-  dragAtom=null;
+  if(touchDragging){dragAtom=null;touchDragging=false}
 },{passive:false});
+
 // Prevent zoom/scroll on canvas
 document.addEventListener('touchmove',e=>{
   if(e.target===mainCv)e.preventDefault();

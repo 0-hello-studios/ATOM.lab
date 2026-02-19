@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ATOM.LAB — Atomic Sandbox</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
@@ -106,9 +106,36 @@ canvas{position:absolute;top:0;left:0}
 #tip .tn{font-size:13px;font-weight:700;margin-bottom:3px}
 #tip .td{font-size:10px;color:var(--dim);line-height:1.5;white-space:pre-line}
 /* Energy graph */
+/* Mobile toggle button */
+#mobToggle{display:none;position:absolute;top:12px;left:12px;z-index:50;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(6,10,20,.9);color:var(--text);font-size:18px;cursor:pointer;backdrop-filter:blur(16px);font-family:inherit}
+/* Mobile */
+@media(max-width:768px){
+  #mobToggle{display:flex;align-items:center;justify-content:center}
+  #side{position:fixed;left:-290px;top:0;bottom:0;z-index:40;width:280px;transition:left .25s ease;box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  #side.open{left:0}
+  #mobOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:35}
+  #mobOverlay.show{display:block}
+  #toolbar{top:10px;left:56px;transform:none;padding:4px 6px;gap:2px}
+  #toolbar .tbtn{padding:6px 8px;font-size:10px}
+  #toolbar .danger{padding:6px 8px;font-size:10px}
+  #statsBar{top:auto;bottom:48px;right:8px;font-size:9px;padding:4px 8px}
+  #dispBar{bottom:8px;left:8px;gap:2px;padding:3px 5px;flex-wrap:wrap;max-width:calc(100vw - 16px)}
+  #dispBar .tbtn{padding:4px 7px;font-size:9px}
+  #molP{bottom:80px;left:8px;font-size:10px}
+  #molP .oval{font-size:11px}
+  .envSection{padding:8px 10px}
+  .srow label{font-size:9px;min-width:50px}
+  .srow span{font-size:9px;min-width:30px}
+}
+@media(max-width:480px){
+  #toolbar{flex-wrap:wrap;max-width:calc(100vw - 70px)}
+  #statsBar{font-size:8px}
+  #dispBar .tbtn{padding:3px 5px;font-size:8px}
+}
 </style>
 </head>
 <body>
+<div id="mobOverlay"></div>
 <div id="app">
 <div id="side">
 <div id="sideHead"><h1><b>ATOM</b><span>.LAB</span></h1></div>
@@ -158,6 +185,8 @@ canvas{position:absolute;top:0;left:0}
 <canvas id="bgCv"></canvas>
 <canvas id="mainCv"></canvas>
 <canvas id="uiCv"></canvas>
+<!-- Mobile sidebar toggle -->
+<button id="mobToggle">☰</button>
 <!-- Floating toolbar -->
 <div id="toolbar">
 <button class="tbtn danger" id="bClear">✕ Clear</button>
@@ -2556,6 +2585,51 @@ function loop(t){
 }
 resize();window.addEventListener('resize',resize);
 requestAnimationFrame(loop);
+
+// === MOBILE SUPPORT ===
+const mobToggle=document.getElementById('mobToggle');
+const mobOverlay=document.getElementById('mobOverlay');
+const sideEl=document.getElementById('side');
+mobToggle.addEventListener('click',()=>{
+  sideEl.classList.toggle('open');
+  mobOverlay.classList.toggle('show');
+  mobToggle.textContent=sideEl.classList.contains('open')?'✕':'☰';
+});
+mobOverlay.addEventListener('click',()=>{
+  sideEl.classList.remove('open');
+  mobOverlay.classList.remove('show');
+  mobToggle.textContent='☰';
+});
+// Close sidebar when spawning structure on mobile
+const origStructClicks=document.querySelectorAll('#gStruct button');
+origStructClicks.forEach(b=>b.addEventListener('click',()=>{
+  if(window.innerWidth<=768){sideEl.classList.remove('open');mobOverlay.classList.remove('show');mobToggle.textContent='☰'}
+}));
+
+// Touch events on canvas
+function touchXY(e){
+  const touch=e.touches[0]||e.changedTouches[0];
+  const r=mainCv.getBoundingClientRect();
+  return{clientX:touch.clientX,clientY:touch.clientY};
+}
+mainCv.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const{clientX,clientY}=touchXY(e);
+  mainCv.dispatchEvent(new MouseEvent('mousedown',{clientX,clientY,button:0,bubbles:true}));
+},{passive:false});
+mainCv.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const{clientX,clientY}=touchXY(e);
+  mainCv.dispatchEvent(new MouseEvent('mousemove',{clientX,clientY,bubbles:true}));
+},{passive:false});
+mainCv.addEventListener('touchend',e=>{
+  e.preventDefault();
+  dragAtom=null;
+},{passive:false});
+// Prevent zoom/scroll on canvas
+document.addEventListener('touchmove',e=>{
+  if(e.target===mainCv)e.preventDefault();
+},{passive:false});
 </script>
 </body>
 </html>

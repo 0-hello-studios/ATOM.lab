@@ -79,6 +79,34 @@ canvas{position:absolute;top:0;left:0}
 .tbtn.danger{border-color:rgba(239,68,68,.3);color:#f87171}.tbtn.danger:hover{background:rgba(239,68,68,.15)}
 .tdiv{width:1px;height:24px;background:rgba(255,255,255,.1);margin:0 2px}
 
+/* === ORBITAL TAB === */
+#orbWrap{position:absolute;inset:0;z-index:15;background:#020510;overflow:hidden}
+#orbCv{width:100%;height:100%;display:block}
+#orbHUD{pointer-events:none}
+.orbRow{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.orbRow label{font-size:10px;color:var(--dim);font-weight:700;min-width:20px}
+.orbRow input[type=range]{flex:1;height:4px;-webkit-appearance:none;background:rgba(255,255,255,.08);border-radius:2px;outline:none}
+.orbRow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--acc2);cursor:pointer;box-shadow:0 0 6px rgba(17,138,178,.4)}
+.orbRow span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--acc2);min-width:30px;text-align:right;font-weight:700}
+.orbBtnRow{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.orbBtn{padding:4px 10px;border-radius:6px;border:1px solid rgba(17,138,178,.25);background:rgba(17,138,178,.08);color:rgba(17,138,178,.7);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;transition:all .12s}
+.orbBtn:hover{border-color:rgba(17,138,178,.5);color:var(--acc2);background:rgba(17,138,178,.15)}
+.orbBtn.active{background:var(--acc2);border-color:var(--acc2);color:#000}
+.orbElGrid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;margin-bottom:6px}
+.orbElBtn{padding:4px 0;border-radius:4px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:800;cursor:pointer;transition:all .12s;text-align:center}
+.orbElBtn:hover{border-color:rgba(17,138,178,.3);color:var(--text);background:rgba(17,138,178,.1)}
+.orbElBtn.active{border-color:var(--acc2);background:rgba(17,138,178,.2);color:var(--acc2)}
+
+/* Quantum number button selectors */
+.qnRow{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.qnLabel{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:800;color:var(--acc2);min-width:14px}
+.qnDesc{font-size:9px;color:var(--dim);min-width:36px;font-weight:600}
+.qnBtns{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+.qnB{min-width:28px;padding:5px 8px;border-radius:6px;border:1.5px solid rgba(17,138,178,.15);background:rgba(17,138,178,.04);color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;cursor:pointer;transition:all .12s;text-align:center}
+.qnB:hover{border-color:rgba(17,138,178,.4);color:var(--text);background:rgba(17,138,178,.1)}
+.qnB.active{background:var(--acc2);border-color:var(--acc2);color:#000;box-shadow:0 0 8px rgba(17,138,178,.3)}
+.qnB.disabled{opacity:.2;pointer-events:none}
+
 /* Display toggles bottom-left */
 #dispBar{position:absolute;bottom:12px;left:12px;z-index:20;display:flex;gap:4px;padding:5px 8px;background:rgba(6,10,20,.9);border:1px solid rgba(255,255,255,.08);border-radius:10px;backdrop-filter:blur(16px)}
 #dispBar .tbtn{padding:5px 10px;font-size:11px}
@@ -143,6 +171,7 @@ canvas{position:absolute;top:0;left:0}
 <div id="sideTabs">
 <button class="stab active" data-tab="elements">⚛ Elements</button>
 <button class="stab" data-tab="structures">◈ Build</button>
+<button class="stab" data-tab="orbitals">☁ Orbitals</button>
 </div>
 <!-- Elements Tab -->
 <div class="tabPanel active" id="tab-elements">
@@ -163,6 +192,41 @@ canvas{position:absolute;top:0;left:0}
 <!-- Structures Tab -->
 <div class="tabPanel" id="tab-structures">
 <div id="gStruct"></div>
+</div>
+<!-- Orbitals Tab (sidebar controls only) -->
+<div class="tabPanel" id="tab-orbitals">
+<div style="padding:8px 10px">
+<div id="orbInfo">
+<div><span id="orbElName" style="color:var(--acc2);font-size:18px;font-weight:800">Hydrogen</span><span id="orbElSym" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800;margin-left:6px;opacity:.5">H</span></div>
+<div id="orbConfig" style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-top:2px">1s¹</div>
+<div id="orbDesc" style="font-size:9px;color:var(--dim);margin-top:4px;line-height:1.5"></div>
+</div>
+</div>
+<div style="padding:4px 10px">
+<div style="font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px">Element</div>
+<div class="orbElGrid" id="orbElGrid"></div>
+</div>
+<div style="padding:6px 10px">
+<div style="font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px">Quantum Numbers</div>
+<div class="qnRow"><span class="qnLabel">n</span><span class="qnDesc">shell</span><div class="qnBtns" id="orbNbtns"></div></div>
+<div class="qnRow"><span class="qnLabel">ℓ</span><span class="qnDesc">shape</span><div class="qnBtns" id="orbLbtns"></div></div>
+<div class="qnRow"><span class="qnLabel">m</span><span class="qnDesc">orient.</span><div class="qnBtns" id="orbMbtns"></div></div>
+<div style="margin-top:8px">
+<div style="display:flex;align-items:center;gap:6px">
+<span style="font-size:10px;color:var(--dim);font-weight:700">Density</span>
+<div class="qnBtns" id="orbPtsBtns"></div>
+</div>
+</div>
+</div>
+<div style="padding:4px 10px">
+<div style="font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px">View</div>
+<div class="orbBtnRow">
+<button class="orbBtn" id="orbSlice">Slice</button>
+<button class="orbBtn active" id="orbSpin">Spin</button>
+<button class="orbBtn" id="orbReset">Reset View</button>
+<button class="orbBtn" id="orbAxes">Axes</button>
+</div>
+</div>
 </div>
 <!-- Environment always visible at bottom -->
 <div class="envSection">
@@ -185,6 +249,11 @@ canvas{position:absolute;top:0;left:0}
 <canvas id="bgCv"></canvas>
 <canvas id="mainCv"></canvas>
 <canvas id="uiCv"></canvas>
+<!-- Orbital 3D overlay (hidden until tab active) -->
+<div id="orbWrap" style="display:none;position:absolute;inset:0;z-index:15;background:#020510">
+<canvas id="orbCv" style="width:100%;height:100%;display:block"></canvas>
+<div id="orbHUD" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(17,138,178,.5);font-weight:700;letter-spacing:1px;pointer-events:none">ORBITAL PROBABILITY CLOUD</div>
+</div>
 <!-- Mobile sidebar toggle -->
 <button id="mobToggle">☰</button>
 <!-- Floating toolbar -->
@@ -2060,6 +2129,23 @@ document.querySelectorAll('.stab').forEach(tab=>{
     document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    // Show/hide orbital overlay
+    const orbW=document.getElementById('orbWrap');
+    const toolbar=document.getElementById('toolbar');
+    const statsBar=document.getElementById('statsBar');
+    const dispBar=document.getElementById('dispBar');
+    if(tab.dataset.tab==='orbitals'){
+      orbW.style.display='block';
+      toolbar.style.display='none';
+      statsBar.style.display='none';
+      if(dispBar)dispBar.style.display='none';
+      setTimeout(()=>{if(typeof initOrb==='function')initOrb()},50);
+    }else{
+      orbW.style.display='none';
+      toolbar.style.display='';
+      statsBar.style.display='';
+      if(dispBar)dispBar.style.display='';
+    }
   });
 });
 // Tool buttons — compact for floating toolbar
@@ -2667,6 +2753,333 @@ mainCv.addEventListener('touchend',e=>{
 document.addEventListener('touchmove',e=>{
   if(e.target===mainCv)e.preventDefault();
 },{passive:false});
+
+// ============================================================
+// ============================================================
+// === ORBITAL PROBABILITY CLOUD VIEWER (2D Canvas) ===
+// ============================================================
+(function(){
+const ORB_NAMES=['s','p','d','f','g'];
+const ORB_ELEMENTS=[
+  {z:1,sym:'H',name:'Hydrogen',cfg:'1s\u00B9',shells:[1]},
+  {z:2,sym:'He',name:'Helium',cfg:'1s\u00B2',shells:[2]},
+  {z:3,sym:'Li',name:'Lithium',cfg:'[He] 2s\u00B9',shells:[2,1]},
+  {z:4,sym:'Be',name:'Beryllium',cfg:'[He] 2s\u00B2',shells:[2,2]},
+  {z:5,sym:'B',name:'Boron',cfg:'[He] 2s\u00B2 2p\u00B9',shells:[2,3]},
+  {z:6,sym:'C',name:'Carbon',cfg:'[He] 2s\u00B2 2p\u00B2',shells:[2,4]},
+  {z:7,sym:'N',name:'Nitrogen',cfg:'[He] 2s\u00B2 2p\u00B3',shells:[2,5]},
+  {z:8,sym:'O',name:'Oxygen',cfg:'[He] 2s\u00B2 2p\u2074',shells:[2,6]},
+  {z:9,sym:'F',name:'Fluorine',cfg:'[He] 2s\u00B2 2p\u2075',shells:[2,7]},
+  {z:10,sym:'Ne',name:'Neon',cfg:'[He] 2s\u00B2 2p\u2076',shells:[2,8]},
+  {z:11,sym:'Na',name:'Sodium',cfg:'[Ne] 3s\u00B9',shells:[2,8,1]},
+  {z:12,sym:'Mg',name:'Magnesium',cfg:'[Ne] 3s\u00B2',shells:[2,8,2]},
+  {z:13,sym:'Al',name:'Aluminum',cfg:'[Ne] 3s\u00B2 3p\u00B9',shells:[2,8,3]},
+  {z:14,sym:'Si',name:'Silicon',cfg:'[Ne] 3s\u00B2 3p\u00B2',shells:[2,8,4]},
+  {z:15,sym:'P',name:'Phosphorus',cfg:'[Ne] 3s\u00B2 3p\u00B3',shells:[2,8,5]},
+  {z:16,sym:'S',name:'Sulfur',cfg:'[Ne] 3s\u00B2 3p\u2074',shells:[2,8,6]},
+  {z:17,sym:'Cl',name:'Chlorine',cfg:'[Ne] 3s\u00B2 3p\u2075',shells:[2,8,7]},
+  {z:18,sym:'Ar',name:'Argon',cfg:'[Ne] 3s\u00B2 3p\u2076',shells:[2,8,8]},
+  {z:19,sym:'K',name:'Potassium',cfg:'[Ar] 4s\u00B9',shells:[2,8,8,1]},
+  {z:20,sym:'Ca',name:'Calcium',cfg:'[Ar] 4s\u00B2',shells:[2,8,8,2]},
+  {z:26,sym:'Fe',name:'Iron',cfg:'[Ar] 3d\u2076 4s\u00B2',shells:[2,8,14,2]},
+  {z:29,sym:'Cu',name:'Copper',cfg:'[Ar] 3d\u00B9\u2070 4s\u00B9',shells:[2,8,18,1]},
+  {z:30,sym:'Zn',name:'Zinc',cfg:'[Ar] 3d\u00B9\u2070 4s\u00B2',shells:[2,8,18,2]},
+  {z:35,sym:'Br',name:'Bromine',cfg:'[Ar] 3d\u00B9\u2070 4s\u00B2 4p\u2075',shells:[2,8,18,7]},
+  {z:36,sym:'Kr',name:'Krypton',cfg:'[Ar] 3d\u00B9\u2070 4s\u00B2 4p\u2076',shells:[2,8,18,8]},
+  {z:47,sym:'Ag',name:'Silver',cfg:'[Kr] 4d\u00B9\u2070 5s\u00B9',shells:[2,8,18,18,1]},
+  {z:79,sym:'Au',name:'Gold',cfg:'[Xe] 4f\u00B9\u2074 5d\u00B9\u2070 6s\u00B9',shells:[2,8,18,32,18,1]},
+];
+
+let orbPts=[],orbRY=0,orbRX=0.4,orbAutoSpin=true,orbInited=false;
+let orbMouseDown=false,orbLastX=0,orbLastY=0;
+let orbAnim=null,orbCv,orbCtx,orbW,orbH,dpr;
+
+const orbQN={n:1,l:0,m:0,pts:15000};
+const PTS_OPTIONS=[5000,10000,15000,25000,40000];
+
+// === Wavefunction sampling — proper real spherical harmonics ===
+function genOrb(){
+  const n=orbQN.n,l=orbQN.l,m=orbQN.m,pts=orbQN.pts;
+  orbPts=[];
+  const TAU=Math.PI*2,PI=Math.PI;
+
+  // Real spherical harmonic Y_l^m(theta, phi)
+  // These produce the actual orbital shapes — lobes, not toroids
+  function realY(l,m,ct,st,ph){
+    // ct=cos(theta), st=sin(theta), ph=phi
+    if(l===0) return 1;
+    if(l===1){
+      if(m===0) return ct;                    // pz: lobe along z
+      if(m===1) return st*Math.cos(ph);       // px: lobe along x
+      if(m===-1) return st*Math.sin(ph);      // py: lobe along y
+    }
+    if(l===2){
+      const st2=st*st,ct2=ct*ct;
+      if(m===0) return 3*ct2-1;               // dz²: donut+lobes along z
+      if(m===1) return st*ct*Math.cos(ph);    // dxz
+      if(m===-1) return st*ct*Math.sin(ph);   // dyz
+      if(m===2) return st2*Math.cos(2*ph);    // dx²-y²: clover in xy
+      if(m===-2) return st2*Math.sin(2*ph);   // dxy: rotated clover
+    }
+    if(l===3){
+      const ct2=ct*ct,st2=st*st;
+      if(m===0) return ct*(5*ct2-3);           // fz³
+      if(m===1) return st*(5*ct2-1)*Math.cos(ph);  // fxz²
+      if(m===-1) return st*(5*ct2-1)*Math.sin(ph);
+      if(m===2) return st2*ct*Math.cos(2*ph);      // fxyz
+      if(m===-2) return st2*ct*Math.sin(2*ph);
+      if(m===3) return st2*st*Math.cos(3*ph);      // fx(x²-3y²)
+      if(m===-3) return st2*st*Math.sin(3*ph);
+    }
+    // Generic fallback for l>=4
+    const am=Math.abs(m);
+    const angular=Math.pow(st,am)*Math.pow(Math.abs(ct),Math.max(0,l-am));
+    return m>=0?angular*Math.cos(am*ph):angular*Math.sin(am*ph);
+  }
+
+  // Radial wavefunction R(n,l,r) — associated Laguerre approximation
+  function radialR(n,l,r){
+    const rho=2*r/n;
+    let R=Math.pow(rho,l)*Math.exp(-rho/2);
+    const nr=n-l-1;
+    if(nr===0) return R;
+    if(nr===1) return R*(1-rho/(2*(l+1)));
+    if(nr===2) return R*(1-rho/(l+1)+rho*rho/(4*(l+1)*(l+2)));
+    if(nr===3) return R*(1-rho*(3.0/(l+1))/4+rho*rho/(4*(l+1)*(l+2))-rho*rho*rho/(24*(l+1)*(l+2)*(l+3)));
+    // Higher nr — use polynomial recursion
+    let L=1,L1=1-rho/(2*l+2+1);
+    for(let k=2;k<=nr;k++){
+      const Lnew=((2*k-1+2*l+1-rho)*L1-(k-1+2*l+1)*L)/(k);
+      L=L1;L1=Lnew;
+    }
+    return R*L1;
+  }
+
+  // Pre-scan to find max probability for rejection sampling
+  let maxP=0;
+  for(let i=0;i<1000;i++){
+    const r=Math.random()*n*5.5;
+    const th=Math.acos(2*Math.random()-1);
+    const ph=Math.random()*TAU;
+    const R=radialR(n,l,r);
+    const Y=realY(l,m,Math.cos(th),Math.sin(th),ph);
+    const p=R*R*Y*Y*r*r;
+    if(p>maxP)maxP=p;
+  }
+  if(maxP<1e-30)maxP=1;
+
+  // Rejection sampling
+  let attempts=0;
+  while(orbPts.length<pts&&attempts<pts*60){
+    attempts++;
+    const r=Math.random()*n*5.5;
+    const th=Math.acos(2*Math.random()-1);
+    const ph=Math.random()*TAU;
+    const ct=Math.cos(th),st=Math.sin(th);
+    const R=radialR(n,l,r);
+    const Y=realY(l,m,ct,st,ph);
+    const prob=R*R*Y*Y*r*r;
+    if(Math.random()<prob/maxP){
+      orbPts.push({
+        x:r*st*Math.cos(ph),
+        y:r*st*Math.sin(ph),
+        z:r*ct,
+        r:r,
+        sign:Y>=0?1:-1  // track lobe sign for coloring
+      });
+    }
+  }
+}
+
+// === 2D Canvas renderer (QUANTUM.LAB style) ===
+function initOrb(){
+  if(orbInited)return;
+  orbInited=true;
+  orbCv=document.getElementById('orbCv');
+  const wrap=document.getElementById('orbWrap');
+  dpr=Math.min(window.devicePixelRatio||1,2);
+  orbW=wrap.clientWidth;orbH=wrap.clientHeight;
+  orbCv.width=orbW*dpr;orbCv.height=orbH*dpr;
+  orbCv.style.width=orbW+'px';orbCv.style.height=orbH+'px';
+  orbCtx=orbCv.getContext('2d');
+  orbCtx.setTransform(dpr,0,0,dpr,0,0);
+
+  genOrb();
+
+  // Mouse controls
+  orbCv.addEventListener('mousedown',e=>{orbMouseDown=true;orbLastX=e.clientX;orbLastY=e.clientY;orbAutoSpin=false;
+    document.getElementById('orbSpin').classList.remove('active')});
+  window.addEventListener('mouseup',()=>orbMouseDown=false);
+  window.addEventListener('mousemove',e=>{
+    if(!orbMouseDown)return;
+    orbRY+=(e.clientX-orbLastX)*0.008;
+    orbRX+=(e.clientY-orbLastY)*0.008;
+    orbRX=Math.max(-Math.PI/2,Math.min(Math.PI/2,orbRX));
+    orbLastX=e.clientX;orbLastY=e.clientY;
+  });
+
+  // Touch
+  let touchId=null;
+  orbCv.addEventListener('touchstart',e=>{e.preventDefault();
+    orbMouseDown=true;touchId=e.touches[0].identifier;
+    orbLastX=e.touches[0].clientX;orbLastY=e.touches[0].clientY;
+    orbAutoSpin=false;document.getElementById('orbSpin').classList.remove('active');
+  },{passive:false});
+  orbCv.addEventListener('touchmove',e=>{e.preventDefault();
+    if(!orbMouseDown)return;
+    const t=[...e.touches].find(t=>t.identifier===touchId);if(!t)return;
+    orbRY+=(t.clientX-orbLastX)*0.008;
+    orbRX+=(t.clientY-orbLastY)*0.008;
+    orbRX=Math.max(-Math.PI/2,Math.min(Math.PI/2,orbRX));
+    orbLastX=t.clientX;orbLastY=t.clientY;
+  },{passive:false});
+  orbCv.addEventListener('touchend',e=>{e.preventDefault();orbMouseDown=false},{passive:false});
+
+  // Resize
+  const ro=new ResizeObserver(()=>{
+    orbW=wrap.clientWidth;orbH=wrap.clientHeight;
+    orbCv.width=orbW*dpr;orbCv.height=orbH*dpr;
+    orbCv.style.width=orbW+'px';orbCv.style.height=orbH+'px';
+    orbCtx=orbCv.getContext('2d');
+    orbCtx.setTransform(dpr,0,0,dpr,0,0);
+  });
+  ro.observe(wrap);
+
+  orbAnimLoop();
+}
+window.initOrb=initOrb;
+
+function orbAnimLoop(){
+  orbAnim=requestAnimationFrame(orbAnimLoop);
+  if(!orbCtx)return;
+  const C=orbCtx;
+  // Fade trail for motion blur effect
+  C.fillStyle='rgba(2,5,16,0.12)';
+  C.fillRect(0,0,orbW,orbH);
+
+  if(orbAutoSpin)orbRY+=0.003;
+  const n=orbQN.n,l=orbQN.l;
+  const sc=Math.min(orbW,orbH)*0.06/n;
+  const ry=orbRY,rx=orbRX;
+  const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);
+  const midX=orbW/2,midY=orbH/2;
+
+  // Draw nucleus glow
+  const ng=C.createRadialGradient(midX,midY,0,midX,midY,12);
+  ng.addColorStop(0,'rgba(0,228,255,0.3)');ng.addColorStop(0.4,'rgba(17,138,178,0.08)');ng.addColorStop(1,'transparent');
+  C.fillStyle=ng;C.beginPath();C.arc(midX,midY,12,0,Math.PI*2);C.fill();
+  // Nucleus dot
+  C.fillStyle='rgba(0,228,255,0.6)';C.beginPath();C.arc(midX,midY,2.5,0,Math.PI*2);C.fill();
+
+  // Render points — QUANTUM.LAB style: hsla by z-depth, tiny rects
+  for(let i=0;i<orbPts.length;i++){
+    const p=orbPts[i];
+    // 3D rotation: Y-axis then X-axis
+    const a=p.x*cy-p.z*sy;
+    const b=p.x*sy+p.z*cy;
+    const c=p.y*cx-b*sx;
+    const d=p.y*sx+b*cx;
+    const px=midX+a*sc;
+    const py=midY-c*sc;
+    // Depth-based alpha
+    const depth=(d+n*5.5)/(n*11);
+    const alpha=Math.max(0.03,Math.min(0.55,depth*0.55));
+    // Color by wavefunction sign — distinct lobes
+    // s orbitals: single color (cyan-blue depth gradient)
+    // p/d/f: positive lobe = cyan, negative lobe = purple/pink
+    let hue;
+    if(l===0){
+      hue=195+p.z*5; // subtle depth shift for s orbitals
+    } else {
+      hue=p.sign>0?195:280; // cyan vs purple for opposite lobes
+    }
+    C.fillStyle='hsla('+hue+',80%,60%,'+alpha+')';
+    C.fillRect(px,py,1.5,1.5);
+  }
+
+  // HUD info
+  C.fillStyle='rgba(17,138,178,0.25)';
+  C.font='bold 10px JetBrains Mono';C.textAlign='left';
+  C.fillText(orbQN.n+ORB_NAMES[orbQN.l]+' orbital  m='+orbQN.m+'  '+orbPts.length+' pts',12,orbH-12);
+  C.textAlign='right';
+  C.fillText('drag to rotate',orbW-12,orbH-12);
+}
+
+// === Build element grid ===
+const orbGrid=document.getElementById('orbElGrid');
+ORB_ELEMENTS.forEach((el,i)=>{
+  const b=document.createElement('button');b.className='orbElBtn';
+  if(i===0)b.classList.add('active');
+  b.textContent=el.sym;b.title=el.name;
+  b.addEventListener('click',()=>{
+    orbGrid.querySelectorAll('.orbElBtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('orbElName').textContent=el.name;
+    document.getElementById('orbElName').style.color=
+      el.z<=2?'var(--acc2)':el.z<=10?'var(--acc)':el.z<=18?'#e67e22':el.z<=36?'var(--acc3)':'#c39bd3';
+    document.getElementById('orbElSym').textContent=el.sym;
+    document.getElementById('orbConfig').textContent=el.cfg;
+    orbQN.n=Math.min(4,el.shells.length);
+    orbQN.l=0;orbQN.m=0;
+    buildQNButtons();
+    genOrb();
+  });
+  orbGrid.appendChild(b);
+});
+
+// === Quantum number button system ===
+function buildQNButtons(){
+  const nC=document.getElementById('orbNbtns');nC.innerHTML='';
+  for(let i=1;i<=4;i++){
+    const b=document.createElement('button');b.className='qnB'+(i===orbQN.n?' active':'');
+    b.textContent=i;
+    b.addEventListener('click',()=>{orbQN.n=i;if(orbQN.l>=i)orbQN.l=i-1;if(Math.abs(orbQN.m)>orbQN.l)orbQN.m=0;buildQNButtons();genOrb()});
+    nC.appendChild(b);
+  }
+  const lC=document.getElementById('orbLbtns');lC.innerHTML='';
+  for(let i=0;i<orbQN.n;i++){
+    const b=document.createElement('button');b.className='qnB'+(i===orbQN.l?' active':'');
+    b.textContent=i+' '+ORB_NAMES[i];
+    b.addEventListener('click',()=>{orbQN.l=i;if(Math.abs(orbQN.m)>i)orbQN.m=0;buildQNButtons();genOrb()});
+    lC.appendChild(b);
+  }
+  const mC=document.getElementById('orbMbtns');mC.innerHTML='';
+  for(let i=-orbQN.l;i<=orbQN.l;i++){
+    const b=document.createElement('button');b.className='qnB'+(i===orbQN.m?' active':'');
+    b.textContent=i===0?'0':i>0?'+'+i:''+i;
+    b.addEventListener('click',()=>{orbQN.m=i;buildQNButtons();genOrb()});
+    mC.appendChild(b);
+  }
+  const pC=document.getElementById('orbPtsBtns');pC.innerHTML='';
+  PTS_OPTIONS.forEach(p=>{
+    const b=document.createElement('button');b.className='qnB'+(p===orbQN.pts?' active':'');
+    b.textContent=p>=1000?(p/1000)+'k':p;
+    b.addEventListener('click',()=>{orbQN.pts=p;buildQNButtons();genOrb()});
+    pC.appendChild(b);
+  });
+  const shapes={0:'spherical',1:'dumbbell',2:'clover',3:'multi-lobe'};
+  const descs={0:'Spherically symmetric cloud. Higher n = more radial nodes.',1:'Dumbbell lobes along an axis. Angular node at equator.',2:'Cloverleaf pattern. Two angular node planes.',3:'Complex multi-lobe shape with three angular nodes.'};
+  document.getElementById('orbDesc').textContent=
+    orbQN.n+ORB_NAMES[orbQN.l]+' (m='+orbQN.m+') — '+shapes[orbQN.l]+'. '+descs[orbQN.l];
+}
+
+// View controls
+document.getElementById('orbSpin').addEventListener('click',function(){
+  orbAutoSpin=!orbAutoSpin;this.classList.toggle('active',orbAutoSpin)});
+document.getElementById('orbReset').addEventListener('click',()=>{
+  orbRX=0.4;orbRY=0;orbAutoSpin=true;
+  document.getElementById('orbSpin').classList.add('active');
+  // Clear canvas fully
+  if(orbCtx){orbCtx.fillStyle='#020510';orbCtx.fillRect(0,0,orbW,orbH)}
+});
+// Remove slice/axes buttons that don't apply to 2D renderer
+const sliceBtn=document.getElementById('orbSlice');
+const axesBtn=document.getElementById('orbAxes');
+if(sliceBtn)sliceBtn.style.display='none';
+if(axesBtn)axesBtn.style.display='none';
+
+buildQNButtons();
+})();
 </script>
 </body>
 </html>
